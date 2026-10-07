@@ -150,11 +150,26 @@ module Portfolios
     def save_skills(portfolio, response)
       data = response.is_a?(Hash) ? response : JSON.parse(response)
 
-      # Destroy existing skills (idempotent regeneration)
+      # Snapshot existing human assessor overrides before updating skills
+      # to prevent destruction during regeneration cascade (P0-02 fix)
+      existing_overrides = portfolio.portfolio_skills.includes(:assessor_override).each_with_object({}) do |ps, hash|
+        next unless ps.assessor_override
+        key = ps.skill_id.presence || ps.skill_label
+        hash[key] = {
+          override_level: ps.assessor_override.override_level,
+          assessor_notes: ps.assessor_override.assessor_notes,
+          overridden_by:  ps.assessor_override.overridden_by,
+          overridden_at:  ps.assessor_override.overridden_at
+        }
+      end
+
+      # Cleanly recreate portfolio skills from latest LLM generation
       portfolio.portfolio_skills.destroy_all
 
+      created_skills = []
+
       (data['configured_skills'] || []).each do |skill_data|
-        portfolio.portfolio_skills.create!(
+        created_skills << portfolio.portfolio_skills.create!(
           skill_id:           skill_data['skill_id'],
           skill_label:        skill_data['skill_label'],
           is_discovered:      false,
@@ -166,7 +181,7 @@ module Portfolios
       end
 
       (data['discovered_skills'] || []).each do |skill_data|
-        portfolio.portfolio_skills.create!(
+        created_skills << portfolio.portfolio_skills.create!(
           skill_id:           nil,
           skill_label:        skill_data['skill_label'],
           is_discovered:      true,
@@ -175,6 +190,20 @@ module Portfolios
           evidence:           Array(skill_data['evidence']).first(3),
           competency_summary: skill_data['competency_summary']
         )
+      end
+
+      # Restore preserved human assessor reviews and ratings
+      created_skills.each do |skill|
+        key = skill.skill_id.presence || skill.skill_label
+        if (saved_override = existing_overrides[key])
+          skill.create_assessor_override!(
+            ai_level:       skill.ai_level,
+            override_level: saved_override[:override_level],
+            assessor_notes: saved_override[:assessor_notes],
+            overridden_by:  saved_override[:overridden_by],
+            overridden_at:  saved_override[:overridden_at]
+          )
+        end
       end
     end
   end

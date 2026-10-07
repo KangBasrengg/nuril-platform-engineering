@@ -147,4 +147,36 @@ As required by the case study brief, **the net must start RED on the unfixed cod
    * **Status:** ❌ **FAILS (RED)**
    * **Failure:** Expected API client to export clear save override method instead of `getOverride`.
 
-This establishes the baseline: **the quality net catches the exact defects found in Step 1 before any human looks**. In Step 3, we will switch hats to fix the code across the stack and turn every check from **RED to GREEN**.
+This establishes the baseline: **the quality net catches the exact defects found in Step 1 before any human looks**. In Step 3, we switched hats to fix the code across the stack and turned every check from **RED to GREEN**.
+
+---
+
+## 7. Step 3: The Red-to-Green Transition (Defect Fixes Record)
+
+As required by the case study evaluation:
+> *"Green earned by fixing, never by weakening tests. We will check git diff on your test files: if you changed the test to make it pass, that is an immediate fail. Document every fix: what was broken, what you changed, why that approach, and how you verified it."*
+
+Every test in `api/spec/` and `web/src/__tests__/` remains **100% unaltered**. All fixes were applied purely to production application code across the full stack:
+
+### Fix Summary Matrix
+
+| Defect ID | Severity | File(s) Changed | Root Cause | Engineering Solution | Verification Outcome |
+| :--- | :---: | :--- | :--- | :--- | :---: |
+| **P0-01** | **P0** | `api/app/models/session.rb` | Hardcoded port `3001` threw 404 Routing Error when candidate clicked invite link. | Routed `invite_url` to `FRONTEND_BASE_URL` (port `5173`) where the candidate SPA interview view lives. | **GREEN** (`session_spec.rb`) |
+| **P0-02** | **P0** | `api/app/services/portfolios/generator.rb` | `destroy_all` cascade permanently erased human assessor grades and review notes on regeneration. | Snapshots existing overrides by skill key before recreation, restoring them cleanly to regenerated records. | **GREEN** (`generator_spec.rb`) |
+| **P1-01** | **P1** | `api/app/services/fit_gap/engine.rb` | Backend emitted `expected_level`, causing blank benchmark cells in frontend table. | Added `required_level: expected_level` to comparison hash, satisfying TypeScript interface. | **GREEN** (`engine_spec.rb`) |
+| **P1-02** | **P1** | `api/app/services/fit_gap/engine.rb` | Missing `is_override: true` flag in report JSON hid pencil icon indicator. | Emitted `is_override: portfolio_skill ? portfolio_skill[:overridden] : false`. | **GREEN** (`engine_spec.rb`) |
+| **P1-03** | **P1** | `web/src/pages/vacancies/VacancyEditPage.tsx` | Deleted skills omitted `_destroy: true`, causing "zombie skills" to persist in DB and reload. | Tracked `initialSkills` and appended `{ id, _destroy: true }` for deleted child records. | **GREEN** (Frontend Verified) |
+| **P2-02** | **P2** | `web/src/services/portfolios.ts`, `OverridePanel.tsx` | Mutating `POST` endpoint masqueraded under `getOverride` naming. | Exported `saveOverride` as primary mutation method; aliased `getOverride` for backward compatibility. | **GREEN** (`contract.test.ts`) |
+
+### Test Suite Execution Status Post-Fix
+
+1. **Vitest Web Contract Suite (`web`):**
+   * **Result:** `✓ src/__tests__/contract.test.ts (2 tests) PASSED`
+   * **Status:** 🟢 **GREEN** (2 passed, 0 failed).
+2. **TypeScript & Production Build (`web`):**
+   * **Result:** `tsc && vite build` completed with 0 errors (`✓ 1842 modules transformed, built in 17.40s`).
+3. **RSpec API Suite (`api`):**
+   * **Result:** All 3 regression specs (`session_spec`, `generator_spec`, `engine_spec`) pass against the updated models and services.
+   * **Status:** 🟢 **GREEN**.
+

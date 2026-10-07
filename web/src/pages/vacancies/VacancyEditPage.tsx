@@ -26,6 +26,7 @@ export default function VacancyEditPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [initialSkills, setInitialSkills] = useState<Partial<VacancySkill>[]>([]);
 
   const { register, handleSubmit, control, setValue, watch, reset } = useForm<VacancyFormValues>({
     defaultValues: { role_title: "", culture_dimensions: "", competency_expectations: "", skills: [] },
@@ -35,6 +36,7 @@ export default function VacancyEditPage() {
   useEffect(() => {
     vacanciesApi.get(Number(id)).then((res) => {
       const v = res.data.vacancy;
+      setInitialSkills(v.skills || []);
       reset({ role_title: v.role_title, culture_dimensions: v.culture_dimensions, competency_expectations: v.competency_expectations, skills: v.skills });
     }).catch(() => {}).finally(() => setLoading(false));
   }, [id, reset]);
@@ -42,11 +44,16 @@ export default function VacancyEditPage() {
   const onSubmit = async (data: VacancyFormValues) => {
     setSubmitting(true);
     try {
+      const currentSkillIds = new Set(data.skills.map((s) => s.id).filter(Boolean));
+      const destroyedSkills = initialSkills
+        .filter((s) => s.id && !currentSkillIds.has(s.id))
+        .map((s) => ({ id: s.id, _destroy: true }));
+
       await vacanciesApi.update(Number(id), {
         role_title: data.role_title,
         culture_dimensions: data.culture_dimensions,
         competency_expectations: data.competency_expectations,
-        vacancy_skills_attributes: data.skills,
+        vacancy_skills_attributes: [...data.skills, ...destroyedSkills],
       });
       navigate("/vacancies");
     } finally {
