@@ -148,3 +148,5 @@ class CoverageWebSocketMiddleware
     }
   end
 end
+
+CoverageWebsocketMiddleware = CoverageWebSocketMiddleware unless defined?(CoverageWebsocketMiddleware)
