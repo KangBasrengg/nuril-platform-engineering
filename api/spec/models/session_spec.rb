@@ -35,6 +35,7 @@ RSpec.describe Session, type: :model do
     end
 
     it 'routes candidates to the frontend web application, never the backend Rails API port' do
+      # Test Evidence for PRD-01:
       # P0-01 Quality Net Check:
       # The backend Rails API serves on port 3001 and has no GET /interview/:token route.
       # The invite link must direct candidates to the Web SPA (default port 5173 or FRONTEND_BASE_URL).
