@@ -1,0 +1,21 @@
+# Dependencies
+**/node_modules/
+
+# Env / secrets
+**/.env
+**/.env.local
+api/config/application.yml
+.secret/
+
+
+# Logs and temp
+**/log/*.log
+**/tmp/
+api/storage/
+
+# Build output
+web/dist/
+web/.vite/
+
+# OS
+.DS_Store
