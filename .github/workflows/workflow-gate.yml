@@ -1,0 +1,27 @@
+name: Workflow Gate (Definition of Ready)
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+concurrency:
+  group: workflow-gate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  enforce-definition-of-ready:
+    name: "Gate: Definition of Ready (G2 Buildable)"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate PR inputs & quality gates
+        run: node .github/scripts/validate-pr.js
