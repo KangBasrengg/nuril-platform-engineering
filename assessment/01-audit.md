@@ -198,15 +198,15 @@ All findings are categorized using the platform standard severity scale:
 
 ## 4. Audit Findings Summary Matrix
 
-| ID | Title | Component | Severity | Classification | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **P0-01** | Broken Candidate Invite URL (404 Routing) | Seam / Model | **P0 Blocker** | Built Wrong | **OPEN** |
-| **P0-02** | Silent Destruction of Assessor Overrides | Backend / Service | **P0 Blocker** | Built Wrong | **OPEN** |
-| **P0-03** | Missing Automated Tests & CI Workflow Gate | Repo / Infra | **P0 Blocker** | Missing Input | **OPEN** |
-| **P1-01** | Contract Mismatch: Blank Required Level in Fit/Gap | Seam / Frontend | **P1 Major** | Built Wrong | **OPEN** |
-| **P1-02** | Missing `is_override` Flag in Fit/Gap Comparisons | Seam / Backend | **P1 Major** | Built Wrong | **OPEN** |
-| **P1-03** | Zombie Skills on Vacancy & Assessment Edit | Fullstack | **P1 Major** | Built Wrong | **OPEN** |
-| **P1-04** | Lost Language Option on Assessment Edit | Frontend / Form | **P1 Major** | Missing Spec | **OPEN** |
-| **P1-05** | Orphaned Signup Flow & Missing API Endpoint | Fullstack / Auth | **P1 Major** | Missing Spec | **OPEN** |
-| **P2-01** | Gemini Model Env Var Name Mismatch in Docs | Documentation | **P2 Minor** | Built Wrong | **OPEN** |
-| **P2-02** | Misleading Method Name (`getOverride` uses POST) | Frontend Client | **P2 Minor** | Built Wrong | **OPEN** |
+| ID | Title | Component | Severity | Classification | Final Status (v1.0.0) | Resolution / Mitigation |
+| :--- | :--- | :--- | :--- | :--- | :---: | :--- |
+| **P0-01** | Broken Candidate Invite URL (404 Routing) | Seam / Model | **P0 Blocker** | Built Wrong | 🟢 **FIXED** | Routed `Session#invite_url` to `FRONTEND_BASE_URL` (port 5173). Verified via `session_spec.rb`. |
+| **P0-02** | Silent Destruction of Assessor Overrides | Backend / Service | **P0 Blocker** | Built Wrong | 🟢 **FIXED** | In-transaction Snapshot & Restore pattern in `Portfolios::Generator`. Verified via `generator_spec.rb`. |
+| **P0-03** | Missing Automated Tests & CI Workflow Gate | Repo / Infra | **P0 Blocker** | Missing Input | 🟢 **FIXED** | Definition of Ready Gate (`workflow-gate.yml`) + Unified CI Net (`ci.yml`) on GitHub Actions. |
+| **P1-01** | Contract Mismatch: Blank Required Level in Fit/Gap | Seam / Frontend | **P1 Major** | Built Wrong | 🟢 **FIXED** | Emitted `required_level: expected_level` in `FitGap::Engine`. Verified via `engine_spec.rb` & Vitest. |
+| **P1-02** | Missing `is_override` Flag in Fit/Gap Comparisons | Seam / Backend | **P1 Major** | Built Wrong | 🟢 **FIXED** | Emitted boolean `is_override: true/false` in `FitGap::Engine`. Verified via `engine_spec.rb` & Vitest. |
+| **P1-03** | Zombie Skills on Vacancy & Assessment Edit | Fullstack | **P1 Major** | Built Wrong | 🟢 **FIXED** | Tracked `initialSkills` dirty state and sent `{ id, _destroy: true }` in `VacancyEditPage.tsx`. |
+| **P1-04** | Lost Language Option on Assessment Edit | Frontend / Form | **P1 Major** | Missing Spec | ⚠️ **REMAINING** | Deferred to v1.1.0 under documented risk acceptance. Assessment creation captures language safely. |
+| **P1-05** | Orphaned Signup Flow & Missing API Endpoint | Fullstack / Auth | **P1 Major** | Missing Spec | ⚠️ **REMAINING** | Deferred to v1.1.0 under documented risk acceptance. System is invite-only; route unlinked. |
+| **P2-01** | Gemini Model Env Var Name Mismatch in Docs | Documentation | **P2 Minor** | Built Wrong | ⚠️ **REMAINING** | Standardized `GEMINI_FLASH_MODEL` in ops runbook; prod env vars safe. |
+| **P2-02** | Misleading Method Name (`getOverride` uses POST) | Frontend Client | **P2 Minor** | Built Wrong | 🟢 **FIXED** | Renamed to `saveOverride` in `portfolios.ts` with backward-compatible `getOverride` alias. |
