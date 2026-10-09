@@ -13,6 +13,9 @@ class Session < ApplicationRecord
 
   validates :invite_token, presence: true, uniqueness: true
   validates :status, inclusion: { in: STATUSES }
+
+  # Demo: Unready change attempting to land without spec or test coverage
+
   validates :end_reason, inclusion: { in: END_REASONS }, allow_nil: true
 
   before_validation :generate_invite_token, on: :create
