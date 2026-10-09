@@ -25,6 +25,7 @@ class Session < ApplicationRecord
   def ended?   = status == 'ended'
   def pending? = status == 'pending'
 
+  # PRD-01 Contract: candidate invite URL routing specification
   def invite_url
     base = ENV['FRONTEND_BASE_URL'].presence || 'http://localhost:5173'
     "#{base}/interview/#{invite_token}"
